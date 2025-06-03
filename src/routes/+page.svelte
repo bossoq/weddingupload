@@ -78,7 +78,9 @@
     //   file.progress = 100; // Mark as complete
     // }
 
-    uploading = false;
+    setTimeout(() => {
+      uploading = false;
+    }, 5000);
   };
 </script>
 
@@ -141,7 +143,11 @@
                 class="bg-dark-brown flex flex-col justify-center overflow-hidden rounded-lg text-center text-sm whitespace-nowrap text-white transition duration-500"
                 style="width: {progress}%"
               >
-                {progress}%
+                {#if progress < 100}
+                  <span class="px-2">{progress}%</span>
+                {:else}
+                  <span class="px-2">Upload Complete</span>
+                {/if}
               </div>
             </div>
           </div>
