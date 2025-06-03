@@ -102,7 +102,8 @@ export const POST: RequestHandler = async ({ request }) => {
       Authorization: `Bearer ${token}`,
       'X-Upload-Content-Type': body.fileType,
       'X-Upload-Content-Length': body.fileSize.toString(),
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      origin: 'https://mookkornwedding.bossoq.live'
     };
     const response = await fetch(
       'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true',
