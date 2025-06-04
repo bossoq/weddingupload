@@ -83,7 +83,14 @@ const issueJWT = async (): Promise<string> => {
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();
-  if (!body || !body.fileName || !body.fileType || !body.fileSize || !body.originalFileName) {
+  if (
+    !body ||
+    !body.fileName ||
+    !body.fileType ||
+    !body.fileSize ||
+    !body.originalFileName ||
+    !body.description
+  ) {
     return new Response(JSON.stringify({ error: 'Invalid request body' }), {
       status: 400,
       headers: {
@@ -98,6 +105,7 @@ export const POST: RequestHandler = async ({ request }) => {
       name: body.fileName,
       mimeType: body.fileType,
       originalFileName: body.originalFileName,
+      description: body.description,
       parents: [SHAREDRIVE_ID]
     };
     const headers = {

@@ -1,8 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { db } from '$lib/db';
+  import { name as storeName } from '$lib/stores';
   import { fade, slide } from 'svelte/transition';
 
+  let authorName: string = $state('');
+  let nameEditing: boolean = $state(true);
   let progress: number = $state(0);
   let uploading: boolean = $state(false);
   let prevUploadedFiles: photos[] = $state([]);
@@ -10,6 +13,10 @@
 
   onMount(async () => {
     try {
+      authorName = $storeName;
+      if (authorName) {
+        nameEditing = false; // If a name is already set, don't allow editing
+      }
       prevUploadedFiles = (await db.photos.toArray()).reverse();
     } catch (error) {
       console.error('Failed to fetch previous uploaded files:', error);
@@ -19,7 +26,7 @@
   const generateFileName = (name: string): string => {
     const timestamp = Date.now();
     const randomString = (Math.random() + 1).toString(36).substring(2);
-    return `${timestamp}-${randomString}-${name}`;
+    return `${timestamp}-${authorName}-${randomString}-${name}`;
   };
 
   const handleFileChange = (event: Event) => {
@@ -89,7 +96,8 @@
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
-          originalFileName: file.originalFileName
+          originalFileName: file.originalFileName,
+          description: `Uploaded by ${authorName}`
         })
       });
       if (!response.ok) {
@@ -203,61 +211,118 @@
           Upload Image for Mook Korn Wedding
         </span>
 
-        {#if uploading}
-          <div class="mb-4 select-none" transition:slide={{ duration: 300 }}>
-            <div
-              class="flex h-8 w-full overflow-hidden rounded-lg bg-gray-200"
-              role="progressbar"
-              aria-valuenow={progress}
-              aria-valuemin="0"
-              aria-valuemax="100"
-            >
-              <div
-                class="bg-dark-brown flex flex-col justify-center overflow-hidden rounded-lg text-center text-sm whitespace-nowrap text-white transition duration-500"
-                style="width: {progress}%"
+        <div class="mb-4 flex flex-col items-center justify-center">
+          <div class="flex w-full items-center justify-center gap-2">
+            <input
+              type="text"
+              name="name"
+              id="name"
+              class="text-dark-brown focus:border-dark-brown focus:ring-dark-brown w-full rounded-md border border-gray-300 px-3 py-2 text-base font-medium focus:ring-1 focus:outline-none"
+              placeholder="Let us know who shared these images"
+              bind:value={authorName}
+              disabled={!nameEditing}
+              oninput={(e) => {
+                authorName = (e.target as HTMLInputElement).value;
+                $storeName = authorName; // Update the store with the new name
+              }}
+              required
+            />
+            {#if nameEditing}
+              <button
+                type="button"
+                class="bg-dark-brown hover:bg-dark-brown/80 rounded-md px-4 py-2 text-white"
+                onclick={(e) => {
+                  e.preventDefault();
+                  nameEditing = !nameEditing;
+                }}
               >
-                {#if progress < 100}
-                  <span class="px-2">{progress}%</span>
-                {:else}
-                  <span class="px-2">Upload Complete</span>
-                {/if}
+                Confirm
+              </button>
+            {:else}
+              <button
+                type="button"
+                class="bg-dark-brown hover:bg-dark-brown/80 rounded-md px-4 py-2 text-white"
+                onclick={() => {
+                  nameEditing = !nameEditing;
+                }}
+              >
+                Edit
+              </button>
+            {/if}
+          </div>
+          {#if nameEditing}
+            <span
+              class="text-dark-brown mt-2 block text-sm font-medium"
+              transition:slide={{ duration: 300 }}
+            >
+              or continue as <button
+                class="cursor-pointer font-bold"
+                onclick={() => {
+                  authorName = 'Anonymous';
+                  $storeName = authorName; // Update the store with the new name
+                  nameEditing = false;
+                }}>Anonymous</button
+              >
+            </span>
+          {/if}
+        </div>
+        {#if !nameEditing}
+          {#if uploading}
+            <div class="mb-4 select-none" transition:slide={{ duration: 300 }}>
+              <div
+                class="flex h-8 w-full overflow-hidden rounded-lg bg-gray-200"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <div
+                  class="bg-dark-brown flex flex-col justify-center overflow-hidden rounded-lg text-center text-sm whitespace-nowrap text-white transition duration-500"
+                  style="width: {progress}%"
+                >
+                  {#if progress < 100}
+                    <span class="px-2">{progress}%</span>
+                  {:else}
+                    <span class="px-2">Upload Complete</span>
+                  {/if}
+                </div>
               </div>
             </div>
-          </div>
-        {:else}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div
-            class="mb-4 select-none"
-            ondrop={handleDrop}
-            ondragover={handleDragOver}
-            transition:slide={{ duration: 300 }}
-          >
-            <input
-              type="file"
-              name="file"
-              id="file"
-              class="sr-only"
-              accept="image/*"
-              multiple
-              onchange={handleFileChange}
-            />
-            <label
-              for="file"
-              class="border-gray relative flex min-h-[160px] items-center justify-center rounded-md border border-dashed p-12 text-center"
+          {:else}
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+              class="mb-4 select-none"
+              ondrop={handleDrop}
+              ondragover={handleDragOver}
+              transition:slide={{ duration: 300 }}
             >
-              <div>
-                <span class="text-dark-brown mb-2 block text-xl font-semibold">
-                  Drop images here
-                </span>
-                <span class="text-dark-brown mb-2 block text-base font-medium"> or </span>
-                <span
-                  class="text-dark-brown border-gray inline-flex rounded border px-7 py-2 text-base font-medium"
-                >
-                  Browse
-                </span>
-              </div>
-            </label>
-          </div>
+              <input
+                type="file"
+                name="file"
+                id="file"
+                class="sr-only"
+                accept="image/*"
+                multiple
+                onchange={handleFileChange}
+              />
+              <label
+                for="file"
+                class="border-gray relative flex min-h-[160px] items-center justify-center rounded-md border border-dashed p-12 text-center"
+              >
+                <div>
+                  <span class="text-dark-brown mb-2 block text-xl font-semibold">
+                    Drop images here
+                  </span>
+                  <span class="text-dark-brown mb-2 block text-base font-medium"> or </span>
+                  <span
+                    class="text-dark-brown border-gray inline-flex rounded border px-7 py-2 text-base font-medium"
+                  >
+                    Browse
+                  </span>
+                </div>
+              </label>
+            </div>
+          {/if}
         {/if}
       </div>
 
