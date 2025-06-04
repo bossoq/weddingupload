@@ -218,7 +218,7 @@
               name="name"
               id="name"
               class="text-dark-brown focus:border-dark-brown focus:ring-dark-brown w-full rounded-md border border-gray-300 px-3 py-2 text-base font-medium focus:ring-1 focus:outline-none"
-              placeholder="Let us know who shared these images"
+              placeholder="Pls put your name here"
               bind:value={authorName}
               disabled={!nameEditing}
               oninput={(e) => {
@@ -253,14 +253,15 @@
               class="text-dark-brown mt-2 block text-sm font-medium"
               transition:slide={{ duration: 300 }}
             >
-              or continue as <button
+              Please put your name here so we know who shared these images.
+              <!-- or continue as <button
                 class="cursor-pointer font-bold"
                 onclick={() => {
                   authorName = 'Anonymous';
                   $storeName = authorName; // Update the store with the new name
                   nameEditing = false;
                 }}>Anonymous</button
-              >
+              > -->
             </span>
           {/if}
         </div>
