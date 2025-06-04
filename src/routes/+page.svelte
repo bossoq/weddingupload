@@ -16,6 +16,7 @@
     if (input.files && input.files.length > 0) {
       files = Array.from(input.files).map((file) => ({
         name: generateFileName(file.name),
+        originalFileName: file.name,
         size: file.size,
         type: file.type,
         progress: 0,
@@ -43,7 +44,8 @@
         body: JSON.stringify({
           fileName: file.name,
           fileType: file.type,
-          fileSize: file.size
+          fileSize: file.size,
+          originalFileName: file.originalFileName
         })
       });
       if (!response.ok) {

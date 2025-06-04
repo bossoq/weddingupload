@@ -10,6 +10,7 @@ declare global {
   }
   interface FileWithProgress {
     name: string;
+    originalFileName: string;
     size: number;
     type: string;
     progress: number;
