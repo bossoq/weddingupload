@@ -229,7 +229,6 @@
             />
             {#if nameEditing}
               <button
-                type="button"
                 class="bg-dark-brown hover:bg-dark-brown/80 rounded-md px-4 py-2 text-white"
                 onclick={(e) => {
                   e.preventDefault();
@@ -240,7 +239,6 @@
               </button>
             {:else}
               <button
-                type="button"
                 class="bg-dark-brown hover:bg-dark-brown/80 rounded-md px-4 py-2 text-white"
                 onclick={() => {
                   nameEditing = !nameEditing;
