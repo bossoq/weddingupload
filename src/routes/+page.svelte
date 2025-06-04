@@ -1,9 +1,21 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { db } from '$lib/db';
   import { fade, slide } from 'svelte/transition';
 
   let progress: number = $state(0);
   let uploading: boolean = $state(false);
+  let prevUploadedFiles: photos[] = $state([]);
   let files: FileWithProgress[] = $state([]);
+
+  onMount(async () => {
+    try {
+      prevUploadedFiles = (await db.photos.toArray()).reverse();
+      console.log(prevUploadedFiles);
+    } catch (error) {
+      console.error('Failed to fetch previous uploaded files:', error);
+    }
+  });
 
   const generateFileName = (name: string): string => {
     const timestamp = Date.now();
@@ -54,20 +66,38 @@
         return;
       }
       const { location }: { location: string } = await response.json();
-      const uploadResponse = await fetch(location, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type
-        },
-        body: file.file
-      });
-      if (!uploadResponse.ok) {
-        console.error('Failed to upload file:', uploadResponse.statusText);
-        uploading = false;
-        return;
-      }
-      file.progress = 100; // Mark as complete
-      progress = Math.round(((files.indexOf(file) + 1) / totalFiles) * 100); // Update overall progress
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', location);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          file.progress = Math.round((event.loaded / event.total) * 100);
+          progress = Math.round(((files.indexOf(file) + 1) / totalFiles) * 100);
+        }
+      };
+      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.send(file.file);
+      xhr.onload = async () => {
+        if (xhr.status === 200) {
+          const { id } = JSON.parse(xhr.responseText);
+          const response = await fetch(`/getThumbnail?fileId=${id}`);
+          if (!response.ok) {
+            console.error('Failed to get thumbnail:', response.statusText);
+            uploading = false;
+            return;
+          }
+          const thumbnail = await response.blob();
+          db.photos.add({
+            name: file.name,
+            photoBlob: thumbnail
+          });
+          prevUploadedFiles = (await db.photos.toArray()).reverse();
+          files = files.filter((f) => f.name !== file.name); // Remove uploaded file from the list
+          console.log('File uploaded successfully');
+        } else {
+          console.error('Failed to upload file:', xhr.statusText);
+          uploading = false;
+        }
+      };
     }
     // for (let i = 0; i < files.length; i++) {
     //   const file = files[i];
@@ -121,6 +151,15 @@
       <div class="absolute h-full w-full bg-gray-200 opacity-60"></div>
     {/if}
     <img src={file.preview} alt={file.name} class="aspect-square w-full rounded-md object-cover" />
+  </div>
+{/snippet}
+{#snippet imageUploaded(file: photos)}
+  <div class="relative flex aspect-square items-center justify-center overflow-hidden">
+    <img
+      src={URL.createObjectURL(file.photoBlob)}
+      alt={file.name}
+      class="aspect-square w-full rounded-md object-cover"
+    />
   </div>
 {/snippet}
 
@@ -184,13 +223,16 @@
         {/if}
       </div>
 
-      {#if files.length > 0}
+      {#if files.length > 0 || prevUploadedFiles.length > 0}
         <div
           class="bg-light-gray mb-4 grid w-full grid-cols-3 gap-4 rounded-md"
           transition:fade={{ duration: 300 }}
         >
           {#each files as file (file.name)}
             {@render imagePreview(file)}
+          {/each}
+          {#each prevUploadedFiles as file (file.id)}
+            {@render imageUploaded(file)}
           {/each}
         </div>
       {/if}

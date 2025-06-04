@@ -17,6 +17,11 @@ declare global {
     preview?: string;
     file: File;
   }
+  interface photos {
+    id?: number;
+    name: string;
+    photoBlob: Blob;
+  }
 }
 
 export {};
