@@ -34,10 +34,43 @@
         preview: URL.createObjectURL(file),
         file
       }));
+      if (files.length === 0) {
+        alert('Please select image files.');
+        return;
+      }
       progress = 0;
       uploading = true;
       handleUpload();
     }
+  };
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      files = Array.from(event.dataTransfer.files)
+        .filter((file) => {
+          return file.type.startsWith('image/');
+        })
+        .map((file) => ({
+          name: generateFileName(file.name),
+          originalFileName: file.name,
+          size: file.size,
+          type: file.type,
+          progress: 0,
+          preview: URL.createObjectURL(file),
+          file
+        }));
+      if (files.length === 0) {
+        alert('Please drop only image files.');
+        return;
+      }
+      progress = 0;
+      uploading = true;
+      handleUpload();
+    }
+  };
+  const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer!.dropEffect = 'copy'; // Show copy cursor
   };
 
   const handleUpload = async () => {
@@ -192,7 +225,13 @@
             </div>
           </div>
         {:else}
-          <div class="mb-4 select-none" transition:slide={{ duration: 300 }}>
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div
+            class="mb-4 select-none"
+            ondrop={handleDrop}
+            ondragover={handleDragOver}
+            transition:slide={{ duration: 300 }}
+          >
             <input
               type="file"
               name="file"
