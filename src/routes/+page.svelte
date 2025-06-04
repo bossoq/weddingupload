@@ -11,7 +11,6 @@
   onMount(async () => {
     try {
       prevUploadedFiles = (await db.photos.toArray()).reverse();
-      console.log(prevUploadedFiles);
     } catch (error) {
       console.error('Failed to fetch previous uploaded files:', error);
     }
