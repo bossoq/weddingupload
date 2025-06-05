@@ -42,7 +42,7 @@
         file
       }));
       if (files.length === 0) {
-        alert('Please select image files.');
+        alert('Please select image or video files.');
         return;
       }
       progress = 0;
@@ -55,7 +55,7 @@
     if (event.dataTransfer && event.dataTransfer.files.length > 0) {
       files = Array.from(event.dataTransfer.files)
         .filter((file) => {
-          return file.type.startsWith('image/');
+          return file.type.startsWith('image/') || file.type.startsWith('video/');
         })
         .map((file) => ({
           name: generateFileName(file.name),
@@ -67,7 +67,7 @@
           file
         }));
       if (files.length === 0) {
-        alert('Please drop only image files.');
+        alert('Please drop only image or video files.');
         return;
       }
       progress = 0;
@@ -208,7 +208,7 @@
     <form class="px-9 py-4">
       <div class="mb-6 pt-4">
         <span class="text-dark-brown mb-5 block text-center text-xl font-bold select-none">
-          Upload Image for Mook Korn Wedding
+          Upload Image or Video for Mook Korn Wedding
         </span>
 
         <div class="mb-4 flex flex-col items-center justify-center">
@@ -300,7 +300,7 @@
                 name="file"
                 id="file"
                 class="sr-only"
-                accept="image/*"
+                accept="image/*,video/*"
                 multiple
                 onchange={handleFileChange}
               />
@@ -310,7 +310,7 @@
               >
                 <div>
                   <span class="text-dark-brown mb-2 block text-xl font-semibold">
-                    Drop images here
+                    Drop images or videos here
                   </span>
                   <span class="text-dark-brown mb-2 block text-base font-medium"> or </span>
                   <span
