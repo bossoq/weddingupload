@@ -3,6 +3,7 @@
   import { db } from '$lib/db';
   import { name as storeName } from '$lib/stores';
   import { fade, slide } from 'svelte/transition';
+  import { _, locale } from 'svelte-i18n';
 
   let authorName: string = $state('');
   let nameEditing: boolean = $state(true);
@@ -42,7 +43,7 @@
         file
       }));
       if (files.length === 0) {
-        alert('Please select image or video files.');
+        alert($_('upload.alertSelect', { default: 'Please select image or video files.' }));
         return;
       }
       progress = 0;
@@ -67,7 +68,7 @@
           file
         }));
       if (files.length === 0) {
-        alert('Please drop only image or video files.');
+        alert($_('upload.alertDrop', { default: 'Please drop only image or video files.' }));
         return;
       }
       progress = 0;
@@ -208,7 +209,7 @@
     <form class="px-9 py-4">
       <div class="mb-6 pt-4">
         <span class="text-dark-brown mb-5 block text-center text-xl font-bold select-none">
-          Upload Image or Video for Mook Korn Wedding
+          {$_('header', { default: 'Upload Image or Video for Mook Korn Wedding' })}
         </span>
 
         <div class="mb-4 flex flex-col items-center justify-center">
@@ -218,7 +219,7 @@
               name="name"
               id="name"
               class="text-dark-brown focus:border-dark-brown focus:ring-dark-brown w-full rounded-md border border-gray-300 px-3 py-2 text-base font-medium focus:ring-1 focus:outline-none"
-              placeholder="Pls put your name here"
+              placeholder={$_('name.placeholder', { default: 'Pls put your name here' })}
               bind:value={authorName}
               disabled={!nameEditing}
               oninput={(e) => {
@@ -230,12 +231,13 @@
             {#if nameEditing}
               <button
                 class="bg-dark-brown hover:bg-dark-brown/80 rounded-md px-4 py-2 text-white"
+                disabled={!authorName}
                 onclick={(e) => {
                   e.preventDefault();
                   nameEditing = !nameEditing;
                 }}
               >
-                Confirm
+                {$_('name.confirm', { default: 'Confirm' })}
               </button>
             {:else}
               <button
@@ -244,7 +246,7 @@
                   nameEditing = !nameEditing;
                 }}
               >
-                Edit
+                {$_('name.edit', { default: 'Edit' })}
               </button>
             {/if}
           </div>
@@ -253,7 +255,9 @@
               class="text-dark-brown mt-2 block text-sm font-medium"
               transition:slide={{ duration: 300 }}
             >
-              Please put your name here so we know who shared these images.
+              {$_('name.label', {
+                default: 'Please put your name here so we know who shared these images.'
+              })}
               <!-- or continue as <button
                 class="cursor-pointer font-bold"
                 onclick={() => {
@@ -282,7 +286,8 @@
                   {#if progress < 100}
                     <span class="px-2">{progress}%</span>
                   {:else}
-                    <span class="px-2">Upload Complete</span>
+                    <span class="px-2">{$_('upload.complete', { default: 'Upload Complete' })}</span
+                    >
                   {/if}
                 </div>
               </div>
@@ -310,13 +315,15 @@
               >
                 <div>
                   <span class="text-dark-brown mb-2 block text-xl font-semibold">
-                    Drop images or videos here
+                    {$_('upload.drop', { default: 'Drop images or videos here' })}
                   </span>
-                  <span class="text-dark-brown mb-2 block text-base font-medium"> or </span>
+                  <span class="text-dark-brown mb-2 block text-base font-medium">
+                    {$_('upload.or', { default: 'or' })}
+                  </span>
                   <span
                     class="text-dark-brown border-gray inline-flex rounded border px-7 py-2 text-base font-medium"
                   >
-                    Browse
+                    {$_('upload.browse', { default: 'Browse' })}
                   </span>
                 </div>
               </label>
@@ -338,6 +345,23 @@
           {/each}
         </div>
       {/if}
+      <div class="text-dark-brown text-center">
+        <button
+          class={$locale?.substring(0, 2) === 'en' ? 'font-extrabold underline' : 'cursor-pointer'}
+          disabled={$locale?.substring(0, 2) === 'en'}
+          onclick={() => locale.set('en')}
+        >
+          EN
+        </button>
+        |
+        <button
+          class={$locale?.substring(0, 2) === 'th' ? 'font-extrabold underline' : 'cursor-pointer'}
+          disabled={$locale?.substring(0, 2) === 'th'}
+          onclick={() => locale.set('th')}
+        >
+          ไทย
+        </button>
+      </div>
     </form>
   </div>
 </div>

@@ -1,0 +1,17 @@
+{
+  "header": "Upload Image or Video for Mook Korn Wedding",
+  "name": {
+    "placeholder": "Pls put your name here",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "label": "Please put your name here so we know who shared these images."
+  },
+  "upload": {
+    "complete": "Upload Complete",
+    "drop": "Drop images or videos here",
+    "or": "or",
+    "browse": "Browse",
+    "alertSelect": "Please select image or video files.",
+    "alertDrop": "Please drop only image or video files."
+  }
+}
