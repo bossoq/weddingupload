@@ -111,9 +111,10 @@
       xhr.open('PUT', location);
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
+          const old_progress = file.progress;
           file.progress = (event.loaded / event.total) * 99; // Scale progress to 0-99%
           // Update overall progress
-          progress += file.progress / totalFiles;
+          progress += (file.progress - old_progress) / totalFiles;
           // progress = Math.round(((files.indexOf(file) + 1) / totalFiles) * 100);
         }
       };
