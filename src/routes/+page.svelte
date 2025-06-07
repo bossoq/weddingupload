@@ -111,8 +111,10 @@
       xhr.open('PUT', location);
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
-          file.progress = Math.round((event.loaded / event.total) * 100);
-          progress = Math.round(((files.indexOf(file) + 1) / totalFiles) * 100);
+          file.progress = (event.loaded / event.total) * 99; // Scale progress to 0-99%
+          // Update overall progress
+          progress += file.progress / totalFiles;
+          // progress = Math.round(((files.indexOf(file) + 1) / totalFiles) * 100);
         }
       };
       xhr.setRequestHeader('Content-Type', file.type);
@@ -133,6 +135,8 @@
           });
           prevUploadedFiles = (await db.photos.toArray()).reverse();
           files = files.filter((f) => f.name !== file.name); // Remove uploaded file from the list
+          file.progress = 100; // Mark as complete
+          progress += 1 / totalFiles; // Increment overall progress
           console.log('File uploaded successfully');
         } else {
           console.error('Failed to upload file:', xhr.statusText);
@@ -180,13 +184,15 @@
             class="text-dark-brown stroke-current"
             stroke-width="2"
             stroke-dasharray="100"
-            stroke-dashoffset="calc(100 - {file.progress})"
+            stroke-dashoffset="calc(100 - {Math.round(file.progress)})"
             stroke-linecap="round"
           ></circle>
         </svg>
         <!-- Percentage Text -->
         <div class="absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-          <span class="text-dark-brown text-center text-2xl font-bold">{file.progress}%</span>
+          <span class="text-dark-brown text-center text-2xl font-bold"
+            >{Math.round(file.progress)}%</span
+          >
         </div>
       </div>
       <div class="absolute h-full w-full bg-gray-200 opacity-60"></div>
@@ -275,16 +281,16 @@
               <div
                 class="flex h-8 w-full overflow-hidden rounded-lg bg-gray-200"
                 role="progressbar"
-                aria-valuenow={progress}
+                aria-valuenow={Math.round(progress)}
                 aria-valuemin="0"
                 aria-valuemax="100"
               >
                 <div
                   class="bg-dark-brown flex flex-col justify-center overflow-hidden rounded-lg text-center text-sm whitespace-nowrap text-white transition duration-500"
-                  style="width: {progress}%"
+                  style="width: {Math.round(progress)}%"
                 >
                   {#if progress < 100}
-                    <span class="px-2">{progress}%</span>
+                    <span class="px-2">{Math.round(progress)}%</span>
                   {:else}
                     <span class="px-2">{$_('upload.complete', { default: 'Upload Complete' })}</span
                     >
