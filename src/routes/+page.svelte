@@ -24,7 +24,7 @@
     }
   });
 
-  const backgroundGenerateVideoThumbnail = async (files: FileWithProgress[]) => {
+  const backgroundGenerateThumbnail = async (files: FileWithProgress[]) => {
     for (const file of files) {
       if (file.type.startsWith('video/')) {
         const video = document.createElement('video');
@@ -60,6 +60,27 @@
         video.muted = true;
         video.playsInline = true;
         video.play();
+      } else {
+        // For images, we can generate a thumbnail directly
+        const img = new Image();
+        img.src = file.preview || '';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 320; // Set desired thumbnail width
+          canvas.height = (img.height / img.width) * 320; // Maintain aspect ratio
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                console.error('Failed to create thumbnail from image');
+                return;
+              }
+              file.preview = URL.createObjectURL(blob); // Update the preview with the generated thumbnail
+              file.photoPreview = blob; // Store the image preview blob
+            });
+          }
+        };
       }
     }
   };
@@ -86,7 +107,7 @@
         alert($_('upload.alertSelect', { default: 'Please select image or video files.' }));
         return;
       }
-      backgroundGenerateVideoThumbnail(files);
+      backgroundGenerateThumbnail(files);
       progress = 0;
       uploading = true;
       handleUpload();
@@ -112,7 +133,7 @@
         alert($_('upload.alertDrop', { default: 'Please drop only image or video files.' }));
         return;
       }
-      backgroundGenerateVideoThumbnail(files);
+      backgroundGenerateThumbnail(files);
       progress = 0;
       uploading = true;
       handleUpload();
@@ -165,17 +186,21 @@
       xhr.onloadend = async () => {
         if (xhr.status === 200) {
           if (file.type.startsWith('image/')) {
-            const { id } = JSON.parse(xhr.responseText);
-            const response = await fetch(`/getThumbnail?fileId=${id}`);
-            if (!response.ok) {
-              console.error('Failed to get thumbnail:', response.statusText);
-              uploading = false;
-              return;
-            }
-            const thumbnail = await response.blob();
+            // const { id } = JSON.parse(xhr.responseText);
+            // const response = await fetch(`/getThumbnail?fileId=${id}`);
+            // if (!response.ok) {
+            //   console.error('Failed to get thumbnail:', response.statusText);
+            //   uploading = false;
+            //   return;
+            // }
+            // const thumbnail = await response.blob();
+            // db.photos.add({
+            //   name: file.name,
+            //   photoBlob: thumbnail
+            // });
             db.photos.add({
               name: file.name,
-              photoBlob: thumbnail
+              photoBlob: file.photoPreview || new Blob([], { type: 'image/jpg' }) // Use the generated thumbnail or a placeholder
             });
             prevUploadedFiles = (await db.photos.toArray()).reverse();
             files = files.filter((f) => f.name !== file.name); // Remove uploaded file from the list

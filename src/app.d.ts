@@ -15,6 +15,7 @@ declare global {
     type: string;
     progress: number;
     preview?: string;
+    photoPreview?: Blob;
     videoPreview?: Blob;
     file: File;
   }
