@@ -24,6 +24,46 @@
     }
   });
 
+  const backgroundGenerateVideoThumbnail = async (files: FileWithProgress[]) => {
+    for (const file of files) {
+      if (file.type.startsWith('video/')) {
+        const video = document.createElement('video');
+        const timeupdate = () => {
+          if (snapImage()) {
+            video.removeEventListener('timeupdate', timeupdate);
+            video.pause();
+          }
+        };
+        video.addEventListener('loadeddata', () => {
+          if (snapImage()) {
+            video.removeEventListener('timeupdate', timeupdate);
+          }
+        });
+        const snapImage = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              console.error('Failed to create thumbnail from video');
+              return false;
+            }
+            file.preview = URL.createObjectURL(blob); // Update the preview with the generated thumbnail
+            file.videoPreview = blob; // Store the video preview blob
+          });
+          return true;
+        };
+        video.addEventListener('timeupdate', timeupdate);
+        video.preload = 'metadata';
+        video.src = file.preview || '';
+        video.muted = true;
+        video.playsInline = true;
+        video.play();
+      }
+    }
+  };
+
   const generateFileName = (name: string): string => {
     const timestamp = Date.now();
     const randomString = (Math.random() + 1).toString(36).substring(2);
@@ -46,6 +86,7 @@
         alert($_('upload.alertSelect', { default: 'Please select image or video files.' }));
         return;
       }
+      backgroundGenerateVideoThumbnail(files);
       progress = 0;
       uploading = true;
       handleUpload();
@@ -71,6 +112,7 @@
         alert($_('upload.alertDrop', { default: 'Please drop only image or video files.' }));
         return;
       }
+      backgroundGenerateVideoThumbnail(files);
       progress = 0;
       uploading = true;
       handleUpload();

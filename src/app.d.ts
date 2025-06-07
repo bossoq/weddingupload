@@ -15,6 +15,7 @@ declare global {
     type: string;
     progress: number;
     preview?: string;
+    videoPreview?: Blob;
     file: File;
   }
   interface photos {
