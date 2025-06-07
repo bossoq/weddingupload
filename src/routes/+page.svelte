@@ -189,7 +189,7 @@
           }
           file.progress = 100; // Mark as complete
           progress += 1 / totalFiles; // Increment overall progress
-          if (progress >= 100) {
+          if (Math.round(progress) >= 100) {
             progress = 100; // Ensure progress does not exceed 100%
             uploading = false; // Mark uploading as complete
           }
@@ -349,7 +349,7 @@
                   class="bg-dark-brown flex flex-col justify-center overflow-hidden rounded-lg text-center text-sm whitespace-nowrap text-white transition duration-500"
                   style="width: {Math.round(progress)}%"
                 >
-                  {#if progress < 100}
+                  {#if Math.round(progress) < 100}
                     <span class="px-2">{Math.round(progress)}%</span>
                   {:else}
                     <span class="px-2">{$_('upload.complete', { default: 'Upload Complete' })}</span
