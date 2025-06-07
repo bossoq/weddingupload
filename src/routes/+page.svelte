@@ -120,24 +120,37 @@
       };
       xhr.setRequestHeader('Content-Type', file.type);
       xhr.send(file.file);
-      xhr.onload = async () => {
+      xhr.onloadend = async () => {
         if (xhr.status === 200) {
-          const { id } = JSON.parse(xhr.responseText);
-          const response = await fetch(`/getThumbnail?fileId=${id}`);
-          if (!response.ok) {
-            console.error('Failed to get thumbnail:', response.statusText);
-            uploading = false;
-            return;
+          if (file.type.startsWith('image/')) {
+            const { id } = JSON.parse(xhr.responseText);
+            const response = await fetch(`/getThumbnail?fileId=${id}`);
+            if (!response.ok) {
+              console.error('Failed to get thumbnail:', response.statusText);
+              uploading = false;
+              return;
+            }
+            const thumbnail = await response.blob();
+            db.photos.add({
+              name: file.name,
+              photoBlob: thumbnail
+            });
+            prevUploadedFiles = (await db.photos.toArray()).reverse();
+            files = files.filter((f) => f.name !== file.name); // Remove uploaded file from the list
+          } else {
+            db.photos.add({
+              name: file.name,
+              photoBlob: file.videoPreview || new Blob([], { type: 'image/jpg' }) // Placeholder for video blob
+            });
+            prevUploadedFiles = (await db.photos.toArray()).reverse();
+            files = files.filter((f) => f.name !== file.name); // Remove uploaded file from the list
           }
-          const thumbnail = await response.blob();
-          db.photos.add({
-            name: file.name,
-            photoBlob: thumbnail
-          });
-          prevUploadedFiles = (await db.photos.toArray()).reverse();
-          files = files.filter((f) => f.name !== file.name); // Remove uploaded file from the list
           file.progress = 100; // Mark as complete
           progress += 1 / totalFiles; // Increment overall progress
+          if (progress >= 100) {
+            progress = 100; // Ensure progress does not exceed 100%
+            uploading = false; // Mark uploading as complete
+          }
           console.log('File uploaded successfully');
         } else {
           console.error('Failed to upload file:', xhr.statusText);
@@ -156,10 +169,14 @@
     //   file.progress = 100; // Mark as complete
     // }
 
-    setTimeout(() => {
-      uploading = false;
-    }, 5000);
+    // setTimeout(() => {
+    //   uploading = false;
+    // }, 5000);
   };
+  // $inspect({
+  //   progress,
+  //   uploading
+  // });
 </script>
 
 {#snippet imagePreview(file: FileWithProgress)}
